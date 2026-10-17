@@ -480,9 +480,9 @@ with st.sidebar:
 
     selected_model = st.selectbox(
         "Gemini Model",
-        options=["gemini-1.5-flash", "gemini-2.0-flash"],
+        options=["gemini-2.5-flash", "gemini-2.5-pro"],
         index=0,
-        help="Choose Gemini 1.5 Flash or Gemini 2.0 Flash for analysis.",
+        help="Choose the Gemini model to use for analysis.",
     )
 
     st.markdown(
