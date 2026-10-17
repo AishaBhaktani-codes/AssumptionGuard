@@ -1,12 +1,7 @@
-import os
 import json
 import html
 import streamlit as st
-from dotenv import load_dotenv
 import google.generativeai as genai
-
-# Load environment variables from .env if present
-load_dotenv()
 
 # Page configuration
 st.set_page_config(
@@ -342,33 +337,15 @@ st.markdown(
 
 
 def get_api_key() -> str | None:
-    """Retrieve Gemini API key from st.secrets, environment variables, or session state."""
-    # 1. Streamlit secrets (check both GEMINI_API_KEY and GOOGLE_API_KEY)
+    """Read the Gemini API key exclusively from Streamlit secrets."""
     try:
-        # Check standard root-level keys
         for key_name in ("GEMINI_API_KEY", "GOOGLE_API_KEY"):
             if key_name in st.secrets:
                 val = st.secrets[key_name]
                 if val and str(val).strip():
                     return str(val).strip()
     except Exception:
-        # st.secrets might raise FileNotFoundError or KeyError when not configured
         pass
-
-    # 2. OS environment variables
-    for env_name in ("GEMINI_API_KEY", "GOOGLE_API_KEY"):
-        env_val = os.getenv(env_name)
-        if env_val and env_val.strip():
-            return env_val.strip()
-
-    # 3. Sidebar manual user input fallback
-    try:
-        session_key = st.session_state.get("user_gemini_api_key", None)
-        if session_key and str(session_key).strip():
-            return str(session_key).strip()
-    except Exception:
-        pass
-
     return None
 
 
@@ -492,6 +469,8 @@ def render_card(
 
 
 # ---------------- Sidebar Configuration ----------------
+current_key = get_api_key()
+
 with st.sidebar:
     st.image(
         "https://api.iconify.design/material-symbols:shield-lock-outline.svg?color=%232563eb",
@@ -505,24 +484,6 @@ with st.sidebar:
         index=0,
         help="Choose Gemini 1.5 Flash or Gemini 2.0 Flash for analysis.",
     )
-
-    st.divider()
-
-    # API Key retrieval and manual entry fallback
-    current_key = get_api_key()
-    if current_key:
-        st.success("API Key detected and ready", icon="✅")
-    else:
-        st.warning("API Key not found in secrets or env", icon="⚠️")
-        user_key = st.text_input(
-            "Enter Gemini API Key",
-            type="password",
-            placeholder="AIzaSy...",
-            help="Key is only kept in session memory.",
-            key="user_gemini_api_key",
-        )
-        if user_key:
-            current_key = user_key
 
     st.markdown(
         """
@@ -719,7 +680,7 @@ if analyze_clicked:
         st.warning("⚠️ Please provide a project description or upload a .txt / .md file to analyze.")
     elif not current_key:
         st.error(
-            "🔑 Gemini API Key is missing. Please add `GEMINI_API_KEY` to your environment variables, `.streamlit/secrets.toml`, or the sidebar."
+            "🔑 API key not configured. Please contact the administrator."
         )
     else:
         with st.spinner("Analyzing project assumptions & constraints with Gemini..."):
